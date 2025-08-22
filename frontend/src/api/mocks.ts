@@ -22,7 +22,7 @@ export const mockApi = {
     if (params?.is_active !== undefined) searchParams.append('is_active', params.is_active.toString())
     if (params?.method) searchParams.append('method', params.method)
     if (params?.search) searchParams.append('search', params.search)
-    if (params?.category_id !== undefined) searchParams.append('category_id', params.category_id.toString())
+    if (params?.category_id !== undefined && params?.category_id !== null) searchParams.append('category_id', params.category_id.toString())
 
     const query = searchParams.toString()
     const url = query ? `/mocks/?${query}` : '/mocks/'

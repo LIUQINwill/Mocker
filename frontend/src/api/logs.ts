@@ -18,9 +18,9 @@ export const logApi = {
     
     if (params?.page) searchParams.append('page', params.page.toString())
     if (params?.size) searchParams.append('size', params.size.toString())
-    if (params?.mock_api_id) searchParams.append('mock_api_id', params.mock_api_id.toString())
+    if (params?.mock_api_id !== undefined && params?.mock_api_id !== null) searchParams.append('mock_api_id', params.mock_api_id.toString())
     if (params?.method) searchParams.append('method', params.method)
-    if (params?.status_code) searchParams.append('status_code', params.status_code.toString())
+    if (params?.status_code !== undefined && params?.status_code !== null) searchParams.append('status_code', params.status_code.toString())
     if (params?.start_date) searchParams.append('start_date', params.start_date)
     if (params?.end_date) searchParams.append('end_date', params.end_date)
 

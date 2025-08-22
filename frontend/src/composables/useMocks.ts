@@ -3,6 +3,7 @@
  */
 import { ref, reactive, computed } from 'vue'
 import { mockApi } from '@/api/mocks'
+import { toast } from '@/composables/useToast'
 import type {
   MockAPI,
   MockAPICreate,
@@ -64,7 +65,10 @@ export function useMocks() {
 
       return result
     } catch (err: any) {
-      error.value = err.message || '获取Mock接口列表失败'
+      const errorMessage = err.message || err.detail || '获取Mock接口列表失败'
+      console.error('获取Mock接口列表失败:', err)
+      // 使用Toast显示错误，而不是设置全局错误状态
+      toast.error('请求失败', errorMessage)
       throw err
     } finally {
       loading.value = false
@@ -84,7 +88,9 @@ export function useMocks() {
 
       return result
     } catch (err: any) {
-      error.value = err.message || '获取Mock接口详情失败'
+      const errorMessage = err.message || err.detail || '获取Mock接口详情失败'
+      console.error('获取Mock接口详情失败:', err)
+      toast.error('请求失败', errorMessage)
       throw err
     } finally {
       loading.value = false
@@ -101,12 +107,15 @@ export function useMocks() {
 
       const result = await mockApi.create(data)
 
+      toast.success('创建成功', `Mock接口 "${data.name}" 已成功创建`)
       // 刷新列表
       await fetchMocks()
 
       return result
     } catch (err: any) {
-      error.value = err.message || '创建Mock接口失败'
+      const errorMessage = err.message || err.detail || '创建Mock接口失败'
+      console.error('创建Mock接口失败:', err)
+      toast.error('创建失败', errorMessage)
       throw err
     } finally {
       loading.value = false
@@ -133,9 +142,12 @@ export function useMocks() {
         currentMock.value = result
       }
 
+      toast.success('更新成功', `Mock接口已成功更新`)
       return result
     } catch (err: any) {
-      error.value = err.message || '更新Mock接口失败'
+      const errorMessage = err.message || err.detail || '更新Mock接口失败'
+      console.error('更新Mock接口失败:', err)
+      toast.error('更新失败', errorMessage)
       throw err
     } finally {
       loading.value = false
@@ -150,6 +162,7 @@ export function useMocks() {
       loading.value = true
       error.value = null
 
+      const mockToDelete = mocks.value.find(mock => mock.id === id)
       await mockApi.delete(id)
 
       // 从本地数据中移除
@@ -160,8 +173,11 @@ export function useMocks() {
         currentMock.value = null
       }
 
+      toast.success('删除成功', `Mock接口 "${mockToDelete?.name || ''}" 已成功删除`)
     } catch (err: any) {
-      error.value = err.message || '删除Mock接口失败'
+      const errorMessage = err.message || err.detail || '删除Mock接口失败'
+      console.error('删除Mock接口失败:', err)
+      toast.error('删除失败', errorMessage)
       throw err
     } finally {
       loading.value = false
@@ -188,9 +204,13 @@ export function useMocks() {
         currentMock.value = result
       }
 
+      const statusText = result.is_active ? '已启用' : '已禁用'
+      toast.success('状态更新', `Mock接口状态已更新为${statusText}`)
       return result
     } catch (err: any) {
-      error.value = err.message || '切换Mock接口状态失败'
+      const errorMessage = err.message || err.detail || '切换Mock接口状态失败'
+      console.error('切换Mock接口状态失败:', err)
+      toast.error('操作失败', errorMessage)
       throw err
     } finally {
       loading.value = false
@@ -206,9 +226,12 @@ export function useMocks() {
       error.value = null
 
       const result = await mockApi.test(path, method, data)
+      toast.success('测试成功', `接口 ${method} ${path} 测试通过`)
       return result
     } catch (err: any) {
-      error.value = err.message || '测试Mock接口失败'
+      const errorMessage = err.message || err.detail || '测试Mock接口失败'
+      console.error('测试Mock接口失败:', err)
+      toast.error('测试失败', errorMessage)
       throw err
     } finally {
       loading.value = false
@@ -250,7 +273,8 @@ export function useMocks() {
       size: 20,
       search: '',
       method: undefined,
-      is_active: undefined
+      is_active: undefined,
+      category_id: undefined
     })
   }
 
