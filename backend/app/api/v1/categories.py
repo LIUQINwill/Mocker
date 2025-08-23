@@ -72,25 +72,6 @@ async def get_category_stats(db: Session = Depends(get_db)):
     return CategoryStats(**stats)
 
 
-@router.get("/{category_id}", response_model=CategoryResponse)
-async def get_category(category_id: int, db: Session = Depends(get_db)):
-    """根据ID获取分类详情"""
-    service = CategoryService(db)
-    category = service.get_category_by_id(category_id)
-    
-    if not category:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"分类 {category_id} 不存在"
-        )
-    
-    return CategoryResponse(
-        **category.__dict__,
-        mock_count=category.mock_count,
-        full_path=category.get_full_path()
-    )
-
-
 @router.post("/", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED)
 async def create_category(
     category_data: CategoryCreate,
@@ -106,54 +87,6 @@ async def create_category(
             mock_count=category.mock_count,
             full_path=category.get_full_path()
         )
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-
-
-@router.put("/{category_id}", response_model=CategoryResponse)
-async def update_category(
-    category_id: int,
-    category_data: CategoryUpdate,
-    db: Session = Depends(get_db)
-):
-    """更新分类"""
-    service = CategoryService(db)
-    
-    try:
-        category = service.update_category(category_id, category_data)
-        if not category:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"分类 {category_id} 不存在"
-            )
-        
-        return CategoryResponse(
-            **category.__dict__,
-            mock_count=category.mock_count,
-            full_path=category.get_full_path()
-        )
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-
-
-@router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_category(category_id: int, db: Session = Depends(get_db)):
-    """删除分类"""
-    service = CategoryService(db)
-    
-    try:
-        success = service.delete_category(category_id)
-        if not success:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"分类 {category_id} 不存在"
-            )
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -204,3 +137,70 @@ async def update_category_sort(
         )
     
     return {"message": "分类排序更新成功"}
+
+
+@router.get("/{category_id}", response_model=CategoryResponse)
+async def get_category(category_id: int, db: Session = Depends(get_db)):
+    """根据ID获取分类详情"""
+    service = CategoryService(db)
+    category = service.get_category_by_id(category_id)
+    
+    if not category:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"分类 {category_id} 不存在"
+        )
+    
+    return CategoryResponse(
+        **category.__dict__,
+        mock_count=category.mock_count,
+        full_path=category.get_full_path()
+    )
+
+
+@router.put("/{category_id}", response_model=CategoryResponse)
+async def update_category(
+    category_id: int,
+    category_data: CategoryUpdate,
+    db: Session = Depends(get_db)
+):
+    """更新分类"""
+    service = CategoryService(db)
+    
+    try:
+        category = service.update_category(category_id, category_data)
+        if not category:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"分类 {category_id} 不存在"
+            )
+        
+        return CategoryResponse(
+            **category.__dict__,
+            mock_count=category.mock_count,
+            full_path=category.get_full_path()
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+@router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_category(category_id: int, db: Session = Depends(get_db)):
+    """删除分类"""
+    service = CategoryService(db)
+    
+    try:
+        success = service.delete_category(category_id)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"分类 {category_id} 不存在"
+            )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )

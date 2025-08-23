@@ -37,6 +37,8 @@ class ApiClient {
         return response
       },
       (error) => {
+        console.error('API 请求失败:', error)
+        
         const apiError: ApiError = {
           message: error.message || '请求失败',
           status: error.response?.status,

@@ -65,6 +65,28 @@
                 />
               </div>
 
+              <!-- 分类选择 -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">所属分类</label>
+                <select
+                  v-model="form.category_id"
+                  class="form-select"
+                  :disabled="!!presetCategoryId"
+                >
+                  <option :value="undefined">未分类</option>
+                  <option
+                    v-for="category in flattenedCategories"
+                    :key="category.id"
+                    :value="category.id"
+                  >
+                    {{ '　'.repeat(category.level) }}{{ category.name }}
+                  </option>
+                </select>
+                <p v-if="presetCategoryId" class="text-xs text-blue-600 mt-1">
+                  已自动设置为当前分类：{{ selectedCategoryName }}
+                </p>
+              </div>
+
               <!-- HTTP方法和路径 -->
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div>
@@ -241,6 +263,10 @@
                   <span class="ml-2">{{ form.status_code }}</span>
                 </div>
                 <div>
+                  <span class="text-sm text-gray-500">所属分类:</span>
+                  <span class="ml-2 text-gray-700">{{ selectedCategoryName }}</span>
+                </div>
+                <div>
                   <span class="text-sm text-gray-500">状态:</span>
                   <span 
                     :class="[
@@ -311,6 +337,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { PlusIcon, PlayIcon } from '@heroicons/vue/24/outline'
 import { useMocks } from '@/composables/useMocks'
+import { useCategories } from '@/composables/useCategories'
 import type { MockAPICreate, MockAPIUpdate } from '@/types/mock'
 
 const route = useRoute()
@@ -326,6 +353,14 @@ const {
   testMock
 } = useMocks()
 
+// 使用分类组合函数
+const {
+  categoryTree,
+  flattenedCategories,
+  findCategoryById,
+  fetchCategoryTree
+} = useCategories()
+
 // 表单数据
 const form = reactive<MockAPICreate & { id?: number }>({
   name: '',
@@ -335,7 +370,24 @@ const form = reactive<MockAPICreate & { id?: number }>({
   status_code: 200,
   response_headers: {},
   response_body: {},
-  is_active: true
+  is_active: true,
+  category_id: undefined
+})
+
+// 预设分类ID（来自路由参数）
+const presetCategoryId = computed(() => {
+  const categoryId = route.params.categoryId
+  if (categoryId && categoryId !== 'create') {
+    return Number(categoryId)
+  }
+  return null
+})
+
+// 当前选中的分类名称
+const selectedCategoryName = computed(() => {
+  if (!form.category_id) return '未分类'
+  const category = findCategoryById(form.category_id)
+  return category ? category.full_path : '未知分类'
 })
 
 // 响应头管理
@@ -435,8 +487,14 @@ const handleSubmit = async () => {
     const data = {
       ...form,
       response_headers: headers,
-      response_body: responseBody
+      response_body: responseBody,
+      // 确保分类ID正确设置
+      category_id: form.category_id || presetCategoryId.value || undefined
     }
+    
+    console.log('提交数据:', data)
+    console.log('当前form.category_id:', form.category_id)
+    console.log('当前presetCategoryId:', presetCategoryId.value)
 
     if (isEdit.value) {
       await updateMock(Number(route.params.id), data as MockAPIUpdate)
@@ -475,6 +533,21 @@ watch(responseHeaders, (newHeaders) => {
 
 // 初始化数据
 onMounted(async () => {
+  // 获取分类数据
+  try {
+    await fetchCategoryTree()
+  } catch (error) {
+    console.warn('获取分类数据失败:', error)
+  }
+
+  // 如果有预设分类ID，设置到表单中
+  if (presetCategoryId.value) {
+    console.log('设置预设分类ID:', presetCategoryId.value)
+    form.category_id = presetCategoryId.value
+  }
+  
+  console.log('初始化完成，表单category_id:', form.category_id)
+
   if (isEdit.value) {
     try {
       const mock = await fetchMock(Number(route.params.id))

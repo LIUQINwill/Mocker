@@ -58,7 +58,7 @@ class CategoryStats(BaseModel):
 
 class BatchUpdateCategoryRequest(BaseModel):
     """批量更新分类请求模型"""
-    category_id: int = Field(..., description="目标分类ID")
+    category_id: Optional[int] = Field(None, description="目标分类ID，null表示未分类")
     mock_ids: List[int] = Field(..., description="接口ID列表")
 
 

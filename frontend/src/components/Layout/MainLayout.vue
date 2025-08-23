@@ -110,9 +110,13 @@
         <RouterView />
       </main>
     </div>
+    
+    <!-- Toast通知容器 -->
+    <ToastContainer />
   </div>
 </template>
 
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
+import { ToastContainer } from '@/components/Toast'
 </script>

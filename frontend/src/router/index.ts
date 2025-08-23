@@ -40,6 +40,15 @@ const router = createRouter({
           }
         },
         {
+          path: '/mocks/create/:categoryId',
+          name: 'MockCreateWithCategory',
+          component: () => import('@/views/MockForm.vue'),
+          meta: {
+            title: '创建Mock接口',
+            hideInMenu: true
+          }
+        },
+        {
           path: '/mocks/:id/edit',
           name: 'MockEdit',
           component: () => import('@/views/MockForm.vue'),
@@ -66,15 +75,6 @@ const router = createRouter({
             icon: 'DocumentTextIcon'
           }
         },
-        {
-          path: '/test',
-          name: 'TestTailwind',
-          component: () => import('@/views/TestTailwind.vue'),
-          meta: {
-            title: '样式测试',
-            hideInMenu: true
-          }
-        }
       ]
     },
     {

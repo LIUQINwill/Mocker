@@ -15,10 +15,10 @@
         <!-- 分类信息 -->
         <div class="flex-1 min-w-0">
           <div class="flex items-center">
-            <span class="text-sm font-medium text-gray-900 truncate">{{ category.name }}</span>
-            <span class="ml-2 text-xs text-gray-500">({{ category.mock_count }})</span>
+            <span class="text-sm font-medium text-gray-900 truncate">{{ category?.name || '未命名分类' }}</span>
+            <span class="ml-2 text-xs text-gray-500">({{ category?.mock_count || 0 }})</span>
           </div>
-          <div v-if="category.description" class="text-xs text-gray-500 truncate">
+          <div v-if="category?.description" class="text-xs text-gray-500 truncate">
             {{ category.description }}
           </div>
         </div>
@@ -49,10 +49,10 @@
     </div>
 
     <!-- 子分类 -->
-    <div v-if="category.children && category.children.length > 0">
+    <div v-if="category?.children && category.children.length > 0">
       <CategoryManageItem
         v-for="child in category.children"
-        :key="child.id"
+        :key="child?.id || Math.random()"
         :category="child"
         :level="level + 1"
         @edit="$emit('edit', $event)"

@@ -43,7 +43,7 @@ export interface CategoryStats {
 }
 
 export interface BatchUpdateCategoryRequest {
-  category_id: number
+  category_id: number | null
   mock_ids: number[]
 }
 

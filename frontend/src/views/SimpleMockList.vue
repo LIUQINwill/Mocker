@@ -13,7 +13,7 @@
         </div>
         <div class="flex items-center space-x-3">
           <button
-            @click="showCategoryModal = true"
+            @click="handleManageCategoriesClick"
             class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -23,7 +23,7 @@
             管理分类
           </button>
           <RouterLink
-            to="/mocks/create"
+            :to="getCreateMockRoute()"
             class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,7 +45,7 @@
           :total-mock-count="totalCount"
           :uncategorized-count="uncategorizedCount"
           @select-category="handleCategorySelect"
-          @manage-categories="showCategoryModal = true"
+          @manage-categories="handleManageCategoriesClick"
         />
       </div>
 
@@ -107,16 +107,9 @@
         </div>
 
         <!-- 接口列表区域 -->
-        <div class="flex-1 overflow-y-auto bg-white">
-          <!-- 错误提示 -->
-          <div v-if="error" class="p-6">
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {{ error }}
-            </div>
-          </div>
-
+        <div class="flex-1 flex flex-col overflow-hidden bg-white">
           <!-- 空状态 -->
-          <div v-else-if="!loading && mocks.length === 0" class="p-12">
+          <div v-if="!loading && mocks.length === 0" class="p-12">
             <div class="text-center">
               <svg class="h-12 w-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
@@ -128,7 +121,7 @@
                 {{ selectedCategoryId !== null ? '请在其他分类中查找或添加新接口' : '开始创建您的第一个Mock接口吧' }}
               </p>
               <RouterLink 
-                to="/mocks/create" 
+                :to="getCreateMockRoute()" 
                 class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
               >
                 <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,19 +133,39 @@
           </div>
 
           <!-- 接口列表 -->
-          <div v-else>
+          <div v-else class="flex-1 flex flex-col">
             <!-- 列表头部 -->
-            <div class="sticky top-0 bg-gray-50 border-b border-gray-200 px-6 py-3">
+            <div class="flex-shrink-0 bg-gray-50 border-b border-gray-200 px-6 py-3 shadow-sm">
               <div class="flex items-center justify-between">
                 <h3 class="text-lg font-medium text-gray-900">
                   {{ getCurrentCategoryName() }} ({{ mocks.length }})
                   <span v-if="loading" class="ml-2 text-sm text-gray-500">加载中...</span>
                 </h3>
                 <div class="flex items-center space-x-2">
+                  <!-- 批量操作按钮 -->
+                  <div v-if="selectedMockIds.size > 0" class="flex items-center space-x-2 mr-3">
+                    <button
+                      @click="handleBatchMove"
+                      class="text-sm px-3 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded transition-colors"
+                      title="批量移动选中的接口"
+                    >
+                      <svg class="h-4 w-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                      </svg>
+                      移动 {{ selectedMockIds.size }} 个接口
+                    </button>
+                    <button
+                      @click="clearSelection"
+                      class="text-sm text-gray-600 hover:text-gray-800"
+                      title="取消选择"
+                    >
+                      取消选择
+                    </button>
+                  </div>
                   <button
                     @click="refreshData"
                     :disabled="loading"
-                    class="text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50"
+                    class="text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50 transition-colors"
                     title="刷新列表"
                   >
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,16 +176,24 @@
               </div>
             </div>
 
-            <!-- 接口表格 -->
-            <div class="overflow-x-auto">
+            <!-- 接口表格容器 -->
+            <div class="flex-1 overflow-auto">
               <table class="min-w-full">
-                <thead class="bg-gray-50 sticky top-16">
+                <thead class="bg-gray-100 sticky top-0 z-10 border-b-2 border-gray-300">
                   <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">接口信息</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">方法</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">路径</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider bg-gray-100 w-12">
+                      <input
+                        type="checkbox"
+                        :checked="isAllSelected"
+                        @change="toggleSelectAll"
+                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider bg-gray-100">接口信息</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider bg-gray-100">方法</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider bg-gray-100">路径</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider bg-gray-100">状态</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider bg-gray-100">操作</th>
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -181,6 +202,15 @@
                     :key="mock.id"
                     class="hover:bg-gray-50"
                   >
+                    <!-- 复选框 -->
+                    <td class="px-6 py-4 w-12">
+                      <input
+                        type="checkbox"
+                        :checked="selectedMockIds.has(mock.id)"
+                        @change="toggleMockSelection(mock.id)"
+                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </td>
                     <!-- 接口信息 -->
                     <td class="px-6 py-4">
                       <div>
@@ -240,6 +270,18 @@
                           测试
                         </button>
                         
+                        <!-- 移动按钮 -->
+                        <button
+                          @click="handleSingleMove(mock)"
+                          class="inline-flex items-center px-3 py-2 text-xs font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 shadow-sm transition-colors duration-200"
+                          title="移动接口"
+                        >
+                          <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                          </svg>
+                          移动
+                        </button>
+                        
                         <!-- 详情按钮 -->
                         <RouterLink
                           :to="`/mocks/${mock.id}`"
@@ -290,8 +332,16 @@
     <!-- 分类管理弹窗 -->
     <CategoryModal
       :visible="showCategoryModal"
-      @close="showCategoryModal = false"
+      @close="handleCategoryModalClose"
       @updated="handleCategoryUpdated"
+    />
+
+    <!-- 移动接口弹窗 -->
+    <MoveInterfaceModal
+      :visible="showMoveModal"
+      :selected-mocks="selectedMocksForMove"
+      @close="handleMoveModalClose"
+      @moved="handleMocksMoved"
     />
   </div>
 </template>
@@ -303,6 +353,7 @@ import { useMocks } from '@/composables/useMocks'
 import { useCategories } from '@/composables/useCategories'
 import { CategoryTree } from '@/components/CategoryTree'
 import { CategoryModal } from '@/components/CategoryModal'
+import { MoveInterfaceModal } from '@/components/MoveInterfaceModal'
 
 // 搜索和筛选状态
 const searchQuery = ref('')
@@ -312,6 +363,11 @@ const selectedCategoryId = ref<number | null>(null)
 
 // 分类弹窗状态
 const showCategoryModal = ref(false)
+
+// 移动接口弹窗状态
+const showMoveModal = ref(false)
+const selectedMocksForMove = ref<any[]>([]) // 选中要移动的接口
+const selectedMockIds = ref<Set<number>>(new Set()) // 批量选择的接口ID
 
 // 分类树引用
 const categoryTreeRef = ref()
@@ -368,6 +424,73 @@ const getCurrentCategoryName = () => {
   return category ? category.name : '接口列表'
 }
 
+// 获取创建Mock接口的路由（支持自动分类）
+const getCreateMockRoute = () => {
+  if (selectedCategoryId.value && selectedCategoryId.value !== null && selectedCategoryId.value !== 0) {
+    return `/mocks/create/${selectedCategoryId.value}`
+  }
+  return '/mocks/create'
+}
+
+// 切换单个接口选择
+const toggleMockSelection = (mockId: number) => {
+  if (selectedMockIds.value.has(mockId)) {
+    selectedMockIds.value.delete(mockId)
+  } else {
+    selectedMockIds.value.add(mockId)
+  }
+}
+
+// 切换全选
+const toggleSelectAll = () => {
+  if (isAllSelected.value) {
+    selectedMockIds.value.clear()
+  } else {
+    filteredMocks.value.forEach(mock => selectedMockIds.value.add(mock.id))
+  }
+}
+
+// 清除选择
+const clearSelection = () => {
+  selectedMockIds.value.clear()
+}
+
+// 是否全选
+const isAllSelected = computed(() => {
+  return filteredMocks.value.length > 0 && filteredMocks.value.every(mock => selectedMockIds.value.has(mock.id))
+})
+
+// 处理单个接口移动
+const handleSingleMove = (mock: any) => {
+  selectedMocksForMove.value = [mock]
+  showMoveModal.value = true
+}
+
+// 处理批量接口移动
+const handleBatchMove = () => {
+  const selectedMocks = filteredMocks.value.filter(mock => selectedMockIds.value.has(mock.id))
+  selectedMocksForMove.value = selectedMocks
+  showMoveModal.value = true
+}
+
+// 处理移动弹窗关闭
+const handleMoveModalClose = () => {
+  showMoveModal.value = false
+  selectedMocksForMove.value = []
+}
+
+// 处理接口移动完成
+const handleMocksMoved = () => {
+  // 清除选择状态
+  clearSelection()
+  
+  // 刷新数据
+  refreshData()
+  
+  // 关闭弹窗
+  handleMoveModalClose()
+}
+
 // 处理分类选择
 const handleCategorySelect = (categoryId: number | null) => {
   selectedCategoryId.value = categoryId
@@ -400,10 +523,11 @@ const refreshData = async () => {
 // 测试Mock接口
 const testMock = async (mock: any) => {
   try {
-    const result = await testMockApi(mock.path, mock.method)
-    alert(`测试成功！响应: ${JSON.stringify(result, null, 2)}`)
+    await testMockApi(mock.path, mock.method)
+    // Toast已在testMockApi中显示成功消息
   } catch (err: any) {
-    alert(`测试失败: ${err.message}`)
+    // Toast已在testMockApi中显示错误消息
+    console.error('测试失败:', err)
   }
 }
 
@@ -412,11 +536,23 @@ const deleteMock = async (mock: any) => {
   if (confirm(`确定要删除Mock接口 "${mock.name}" 吗？`)) {
     try {
       await deleteMockApi(mock.id)
+      // Toast已在deleteMockApi中显示成功消息
       refreshData()
     } catch (err: any) {
-      alert(`删除失败: ${err.message}`)
+      // Toast已在deleteMockApi中显示错误消息
+      console.error('删除失败:', err)
     }
   }
+}
+
+// 处理分类管理弹窗关闭
+const handleCategoryModalClose = () => {
+  showCategoryModal.value = false
+}
+
+// 处理分类管理按钮点击
+const handleManageCategoriesClick = () => {
+  showCategoryModal.value = true
 }
 
 // 处理分类更新
@@ -429,10 +565,16 @@ const handleCategoryUpdated = () => {
   refreshData()
 }
 
-// 监听搜索和筛选条件变化
+// 监听搜索和筛选条件变化 - 使用计时器实现防抖
+let searchTimeout: NodeJS.Timeout | null = null
 watch([searchQuery, selectedMethod, selectedStatus], () => {
-  handleFilter()
-}, { debounce: 300 })
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+  searchTimeout = setTimeout(() => {
+    handleFilter()
+  }, 300)
+})
 
 // 组件挂载时获取数据
 onMounted(async () => {

@@ -21,7 +21,7 @@ export const categoryApi = {
     skip?: number
     limit?: number
   }): Promise<Category[]> {
-    const { data } = await apiClient.get('/api/v1/categories', { params })
+    const data = await apiClient.get('/categories', { params })
     return data
   },
 
@@ -29,7 +29,7 @@ export const categoryApi = {
    * 获取分类树形结构
    */
   async getCategoryTree(): Promise<CategoryTree[]> {
-    const { data } = await apiClient.get('/api/v1/categories/tree')
+    const data = await apiClient.get('/categories/tree')
     return data
   },
 
@@ -37,7 +37,7 @@ export const categoryApi = {
    * 获取分类统计信息
    */
   async getCategoryStats(): Promise<CategoryStats> {
-    const { data } = await apiClient.get('/api/v1/categories/stats')
+    const data = await apiClient.get('/categories/stats')
     return data
   },
 
@@ -45,7 +45,7 @@ export const categoryApi = {
    * 根据ID获取分类详情
    */
   async getCategory(categoryId: number): Promise<Category> {
-    const { data } = await apiClient.get(`/api/v1/categories/${categoryId}`)
+    const data = await apiClient.get(`/categories/${categoryId}`)
     return data
   },
 
@@ -53,7 +53,7 @@ export const categoryApi = {
    * 创建分类
    */
   async createCategory(categoryData: CategoryCreate): Promise<Category> {
-    const { data } = await apiClient.post('/api/v1/categories', categoryData)
+    const data = await apiClient.post('/categories/', categoryData)
     return data
   },
 
@@ -61,7 +61,7 @@ export const categoryApi = {
    * 更新分类
    */
   async updateCategory(categoryId: number, categoryData: CategoryUpdate): Promise<Category> {
-    const { data } = await apiClient.put(`/api/v1/categories/${categoryId}`, categoryData)
+    const data = await apiClient.put(`/categories/${categoryId}`, categoryData)
     return data
   },
 
@@ -69,14 +69,14 @@ export const categoryApi = {
    * 删除分类
    */
   async deleteCategory(categoryId: number): Promise<void> {
-    await apiClient.delete(`/api/v1/categories/${categoryId}`)
+    await apiClient.delete(`/categories/${categoryId}`)
   },
 
   /**
    * 批量更新接口分类
    */
   async batchUpdateMockCategory(request: BatchUpdateCategoryRequest): Promise<{ message: string }> {
-    const { data } = await apiClient.put('/api/v1/categories/batch-update-mocks', request)
+    const data = await apiClient.put('/categories/batch-update-mocks', request)
     return data
   },
 
@@ -84,7 +84,7 @@ export const categoryApi = {
    * 更新分类排序
    */
   async updateCategorySort(request: CategorySortRequest): Promise<{ message: string }> {
-    const { data } = await apiClient.put('/api/v1/categories/sort', request)
+    const data = await apiClient.put('/categories/sort', request)
     return data
   }
 }

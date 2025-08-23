@@ -248,11 +248,12 @@ const validCategories = computed(() => {
     return []
   }
   
-  // 简化过滤逻辑，只检查最基本的属性
+  // 确保数组中的每个元素都有必需的属性
   const filtered = categoryTree.value.filter(category => {
     return category && 
-           category.id !== undefined && category.id !== null &&
-           category.name !== undefined && category.name !== null
+           typeof category.id === 'number' &&
+           typeof category.name === 'string' && 
+           category.name.trim().length > 0
   })
   
   return filtered
