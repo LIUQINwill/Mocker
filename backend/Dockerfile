@@ -6,8 +6,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# 创建非root用户
-RUN groupadd -r appuser && useradd -r -g appuser appuser
 
 # 设置工作目录
 WORKDIR /app
@@ -36,11 +34,7 @@ RUN uv sync --frozen --no-dev --index-url https://pypi.tuna.tsinghua.edu.cn/simp
 # 复制应用代码
 COPY backend/ .
 
-# 更改文件所有权
-RUN chown -R appuser:appuser /app
 
-# 切换到非root用户
-USER appuser
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
