@@ -20,14 +20,14 @@ export function useMocks() {
   const pagination = reactive({
     total: 0,
     page: 1,
-    size: 20,
+    size: 10,
     pages: 0
   })
 
   // 查询参数
   const query = reactive<MockAPIQuery>({
     page: 1,
-    size: 20,
+    size: 10,
     search: '',
     method: undefined,
     is_active: undefined,
@@ -270,7 +270,7 @@ export function useMocks() {
   const resetQuery = () => {
     Object.assign(query, {
       page: 1,
-      size: 20,
+      size: 10,
       search: '',
       method: undefined,
       is_active: undefined,

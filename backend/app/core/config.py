@@ -30,6 +30,10 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:8080",
         "http://localhost:5173",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "file://",  # 支持本地文件访问
+        "*"  # 开发环境允许所有来源
     ]
 
     # Mock服务配置

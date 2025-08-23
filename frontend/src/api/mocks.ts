@@ -69,22 +69,30 @@ export const mockApi = {
    * 测试Mock接口
    */
   async test(path: string, method: string = 'GET', data?: any): Promise<any> {
-    const mockClient = apiClient
+    // 直接访问Mock接口，不使用API baseURL
     const url = `/mock${path}`
+    const config: RequestInit = {
+      method: method.toUpperCase(),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+
+    if (data && ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase())) {
+      config.body = JSON.stringify(data)
+    }
+
+    const response = await fetch(url, config)
     
-    switch (method.toUpperCase()) {
-      case 'GET':
-        return mockClient.get(url)
-      case 'POST':
-        return mockClient.post(url, data)
-      case 'PUT':
-        return mockClient.put(url, data)
-      case 'DELETE':
-        return mockClient.delete(url)
-      case 'PATCH':
-        return mockClient.patch(url, data)
-      default:
-        return mockClient.get(url)
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+
+    const contentType = response.headers.get('content-type')
+    if (contentType && contentType.includes('application/json')) {
+      return await response.json()
+    } else {
+      return await response.text()
     }
   }
 }

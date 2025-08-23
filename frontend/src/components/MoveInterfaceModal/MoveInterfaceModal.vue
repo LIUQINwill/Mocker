@@ -159,11 +159,6 @@ const handleConfirm = async () => {
       categoryId = Number(selectedCategoryId.value)
     }
     
-    console.log('准备发送的数据:', {
-      category_id: categoryId,
-      mock_ids: mockIds
-    })
-    
     await categoryApi.batchUpdateMockCategory({
       category_id: categoryId,
       mock_ids: mockIds

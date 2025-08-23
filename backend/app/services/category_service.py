@@ -154,20 +154,19 @@ class CategoryService:
             "total_apis": total_apis
         }
 
-    def batch_update_mock_category(self, category_id: int, mock_ids: List[int]) -> bool:
+    def batch_update_mock_category(self, category_id: Optional[int], mock_ids: List[int]) -> bool:
         """批量更新接口分类"""
-        # 验证分类是否存在
-        if category_id != 0:  # 0 表示移除分类
+        # 验证分类是否存在（当category_id不为None时）
+        if category_id is not None:
             category = self.get_category_by_id(category_id)
             if not category:
                 raise ValueError(f"分类 {category_id} 不存在")
 
-        # 批量更新
-        target_category_id = None if category_id == 0 else category_id
+        # 批量更新 - category_id可以是None（表示未分类）或具体的分类ID
         updated_count = (
             self.db.query(MockAPI)
             .filter(MockAPI.id.in_(mock_ids))
-            .update({"category_id": target_category_id}, synchronize_session=False)
+            .update({"category_id": category_id}, synchronize_session=False)
         )
         
         self.db.commit()

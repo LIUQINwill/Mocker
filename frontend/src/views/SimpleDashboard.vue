@@ -40,7 +40,8 @@
                   总接口数
                 </dt>
                 <dd class="text-2xl font-semibold text-gray-900">
-                  {{ stats.totalMocks }}
+                  <span v-if="loading">--</span>
+                  <span v-else>{{ stats.total_mocks }}</span>
                 </dd>
               </dl>
             </div>
@@ -63,7 +64,8 @@
                   今日请求数
                 </dt>
                 <dd class="text-2xl font-semibold text-gray-900">
-                  {{ stats.todayRequests }}
+                  <span v-if="loading">--</span>
+                  <span v-else>{{ stats.today_requests }}</span>
                 </dd>
               </dl>
             </div>
@@ -86,7 +88,8 @@
                   成功率
                 </dt>
                 <dd class="text-2xl font-semibold text-gray-900">
-                  {{ stats.successRate }}%
+                  <span v-if="loading">--</span>
+                  <span v-else>{{ stats.success_rate }}%</span>
                 </dd>
               </dl>
             </div>
@@ -109,9 +112,76 @@
                   平均响应时间
                 </dt>
                 <dd class="text-2xl font-semibold text-gray-900">
-                  {{ stats.avgResponseTime }}ms
+                  <span v-if="loading">--</span>
+                  <span v-else>{{ stats.avg_response_time }}ms</span>
                 </dd>
               </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 最近的Mock接口 -->
+    <div class="bg-white shadow rounded-lg">
+      <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+          最近的Mock接口
+        </h3>
+        <div v-if="loading" class="space-y-3">
+          <div class="animate-pulse">
+            <div class="flex space-x-4">
+              <div class="rounded-full bg-gray-300 h-10 w-10"></div>
+              <div class="flex-1 space-y-2 py-1">
+                <div class="h-4 bg-gray-300 rounded w-3/4"></div>
+                <div class="h-4 bg-gray-300 rounded w-1/2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-else-if="recentMocks.length === 0" class="text-center py-8">
+          <div class="text-gray-400 mb-2">
+            <svg class="h-12 w-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+            </svg>
+          </div>
+          <p class="text-gray-500">暂无Mock接口</p>
+        </div>
+        <div v-else class="space-y-3">
+          <div 
+            v-for="mock in recentMocks" 
+            :key="mock.id"
+            class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
+          >
+            <div class="flex items-center space-x-3">
+              <span 
+                :class="[
+                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                  getMethodBadgeClass(mock.method)
+                ]"
+              >
+                {{ mock.method }}
+              </span>
+              <div>
+                <p class="text-sm font-medium text-gray-900">{{ mock.name }}</p>
+                <p class="text-sm text-gray-500">{{ mock.path }}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div 
+                :class="[
+                  'w-2 h-2 rounded-full',
+                  mock.is_active ? 'bg-green-400' : 'bg-gray-400'
+                ]"
+              ></div>
+              <span 
+                :class="[
+                  'text-sm',
+                  mock.is_active ? 'text-green-700' : 'text-gray-500'
+                ]"
+              >
+                {{ mock.is_active ? '已启用' : '已禁用' }}
+              </span>
             </div>
           </div>
         </div>
@@ -229,14 +299,63 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 
-// 模拟统计数据
+// 统计数据状态
+const loading = ref(true)
 const stats = ref({
-  totalMocks: 12,
-  todayRequests: 156,
-  successRate: 98.5,
-  avgResponseTime: 45
+  total_mocks: 0,
+  active_mocks: 0,
+  today_requests: 0,
+  success_rate: 0.0,
+  avg_response_time: 0.0
+})
+
+// 最近的Mock接口数据
+const recentMocks = ref([])
+
+// 获取方法标签样式
+const getMethodBadgeClass = (method: string) => {
+  const methodClasses = {
+    'GET': 'bg-green-100 text-green-800',
+    'POST': 'bg-blue-100 text-blue-800',
+    'PUT': 'bg-yellow-100 text-yellow-800',
+    'DELETE': 'bg-red-100 text-red-800',
+    'PATCH': 'bg-purple-100 text-purple-800'
+  }
+  return methodClasses[method] || 'bg-gray-100 text-gray-800'
+}
+
+// 获取仪表板统计数据
+const fetchDashboardStats = async () => {
+  try {
+    const response = await fetch('/api/v1/dashboard/stats')
+    if (!response.ok) {
+      throw new Error(`HTTP错误! 状态: ${response.status}`)
+    }
+    const data = await response.json()
+    
+    stats.value = data.stats
+    recentMocks.value = data.recent_mocks
+    loading.value = false
+  } catch (error) {
+    console.error('获取仪表板数据失败:', error)
+    // 如果API请求失败，显示默认数据
+    stats.value = {
+      total_mocks: 0,
+      active_mocks: 0,
+      today_requests: 0,
+      success_rate: 0.0,
+      avg_response_time: 0.0
+    }
+    recentMocks.value = []
+    loading.value = false
+  }
+}
+
+// 组件挂载时获取数据
+onMounted(() => {
+  fetchDashboardStats()
 })
 </script>

@@ -22,6 +22,7 @@ class MockAPIBase(BaseModel):
     response_body: Optional[Dict[str, Any]] = Field(None, description="响应体配置")
     response_template: Optional[str] = Field(None, description="响应模板")
     is_active: bool = Field(True, description="是否启用")
+    category_id: Optional[int] = Field(None, description="所属分类ID")
 
 
 class MockAPICreate(MockAPIBase):
@@ -42,6 +43,7 @@ class MockAPIUpdate(BaseModel):
     response_body: Optional[Dict[str, Any]] = Field(None, description="响应体配置")
     response_template: Optional[str] = Field(None, description="响应模板")
     is_active: Optional[bool] = Field(None, description="是否启用")
+    category_id: Optional[int] = Field(None, description="所属分类ID")
 
 
 class MockAPIResponse(MockAPIBase):

@@ -17,7 +17,7 @@ class MockService:
     @staticmethod
     def create_mock(db: Session, mock_data: MockAPICreate) -> MockAPI:
         """创建Mock接口"""
-        db_mock = MockAPI(**mock_data.dict())
+        db_mock = MockAPI(**mock_data.model_dump())
         db.add(db_mock)
         db.commit()
         db.refresh(db_mock)

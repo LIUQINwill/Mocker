@@ -36,27 +36,49 @@
           <!-- 方法筛选 -->
           <div>
             <label class="form-label">HTTP方法</label>
-            <select v-model="selectedMethod" class="form-select" @change="handleFilter">
-              <option value="">全部方法</option>
-              <option value="GET">GET</option>
-              <option value="POST">POST</option>
-              <option value="PUT">PUT</option>
-              <option value="DELETE">DELETE</option>
-              <option value="PATCH">PATCH</option>
-            </select>
+            <div class="relative">
+              <select 
+                v-model="selectedMethod" 
+                class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm appearance-none transition-colors duration-200 hover:border-gray-400" 
+                @change="handleFilter"
+              >
+                <option value="">全部方法</option>
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+              </select>
+              <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </div>
           </div>
 
           <!-- 状态码筛选 -->
           <div>
             <label class="form-label">状态码</label>
-            <select v-model="selectedStatus" class="form-select" @change="handleFilter">
-              <option value="">全部状态</option>
-              <option value="200">200 - 成功</option>
-              <option value="201">201 - 已创建</option>
-              <option value="400">400 - 请求错误</option>
-              <option value="404">404 - 未找到</option>
-              <option value="500">500 - 服务器错误</option>
-            </select>
+            <div class="relative">
+              <select 
+                v-model="selectedStatus" 
+                class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm appearance-none transition-colors duration-200 hover:border-gray-400" 
+                @change="handleFilter"
+              >
+                <option value="">全部状态</option>
+                <option value="200">200 - 成功</option>
+                <option value="201">201 - 已创建</option>
+                <option value="400">400 - 请求错误</option>
+                <option value="404">404 - 未找到</option>
+                <option value="500">500 - 服务器错误</option>
+              </select>
+              <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </div>
           </div>
 
           <!-- 开始日期 -->
@@ -103,15 +125,22 @@
           </h3>
           <div class="flex items-center space-x-2 text-sm text-gray-500">
             <span>每页显示</span>
-            <select 
-              v-model="pagination.size" 
-              class="form-select text-sm py-1"
-              @change="handlePageSizeChange"
-            >
-              <option value="10">10</option>
-              <option value="20">20</option>
-              <option value="50">50</option>
-            </select>
+            <div class="relative">
+              <select 
+                v-model="pagination.size" 
+                class="block px-3 py-1 pr-8 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm appearance-none transition-colors duration-200 hover:border-gray-400"
+                @change="handlePageSizeChange"
+              >
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
+              <div class="absolute inset-y-0 right-0 flex items-center px-1 pointer-events-none">
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </div>
             <span>条</span>
           </div>
         </div>

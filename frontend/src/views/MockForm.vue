@@ -204,7 +204,20 @@
 
               <!-- 响应体 -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">响应体 (JSON格式)</label>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-sm font-medium text-gray-700">响应体 (JSON格式)</label>
+                  <button
+                    @click="formatResponseBody"
+                    type="button"
+                    class="text-xs text-blue-600 hover:text-blue-800 transition-colors px-2 py-1 border border-blue-300 rounded hover:bg-blue-50"
+                    title="格式化JSON"
+                  >
+                    <svg class="h-3 w-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                    格式化
+                  </button>
+                </div>
                 <textarea
                   v-model="responseBodyText"
                   rows="30"
@@ -296,7 +309,7 @@
                 测试接口
               </button>
               <p class="text-xs text-gray-500 mt-2">
-                保存后可以测试接口响应
+                {{ isEdit ? '测试当前接口的响应' : '保存接口后立即测试响应' }}
               </p>
             </div>
           </div>
@@ -408,7 +421,10 @@ const errors = reactive({
 
 // 计算属性
 const isEdit = computed(() => !!route.params.id)
-const canTest = computed(() => form.method && form.path && !isEdit.value)
+const canTest = computed(() => {
+  // 测试需要接口已经存在（编辑模式）或者在创建模式下有完整的路径和方法信息
+  return form.method && form.path && (isEdit.value || (!isEdit.value && form.name.trim()))
+})
 
 // 返回上一页
 const goBack = () => {
@@ -423,6 +439,19 @@ const addHeader = () => {
 // 删除响应头
 const removeHeader = (index: number) => {
   responseHeaders.value.splice(index, 1)
+}
+
+// 格式化响应体JSON
+const formatResponseBody = () => {
+  try {
+    // 尝试解析JSON
+    const parsed = JSON.parse(responseBodyText.value)
+    // 格式化JSON，使用2个空格缩进
+    responseBodyText.value = JSON.stringify(parsed, null, 2)
+  } catch (error) {
+    // 如果JSON格式不正确，显示错误提示
+    alert('JSON格式不正确，请检查格式后重试')
+  }
 }
 
 // 验证表单
@@ -491,10 +520,6 @@ const handleSubmit = async () => {
       // 确保分类ID正确设置
       category_id: form.category_id || presetCategoryId.value || undefined
     }
-    
-    console.log('提交数据:', data)
-    console.log('当前form.category_id:', form.category_id)
-    console.log('当前presetCategoryId:', presetCategoryId.value)
 
     if (isEdit.value) {
       await updateMock(Number(route.params.id), data as MockAPIUpdate)
@@ -513,10 +538,50 @@ const testInterface = async () => {
   if (!canTest.value) return
 
   try {
+    // 如果是编辑模式，直接测试
+    if (isEdit.value) {
+      const result = await testMock(form.path, form.method)
+      alert(`测试成功！响应: ${JSON.stringify(result, null, 2)}`)
+      return
+    }
+    
+    // 如果是创建模式，需要先临时保存接口
+    if (!validateForm()) {
+      alert('请先完善接口信息')
+      return
+    }
+    
+    // 临时创建接口用于测试
+    const headers = {}
+    responseHeaders.value.forEach(header => {
+      if (header.key && header.value) {
+        headers[header.key] = header.value
+      }
+    })
+
+    const responseBody = JSON.parse(responseBodyText.value)
+
+    const data = {
+      ...form,
+      response_headers: headers,
+      response_body: responseBody,
+      category_id: form.category_id || presetCategoryId.value || undefined
+    }
+    
+    // 创建临时接口
+    const createdMock = await createMock(data)
+    
+    // 测试创建的接口
     const result = await testMock(form.path, form.method)
     alert(`测试成功！响应: ${JSON.stringify(result, null, 2)}`)
-  } catch (error) {
-    alert(`测试失败: ${error.message}`)
+    
+    // 提示用户接口已经创建
+    if (confirm('测试完成！接口已经创建成功。是否跳转到接口列表？')) {
+      router.push('/mocks')
+    }
+    
+  } catch (error: any) {
+    alert(`测试失败: ${error.message || error.detail || '未知错误'}`)
   }
 }
 
@@ -542,11 +607,8 @@ onMounted(async () => {
 
   // 如果有预设分类ID，设置到表单中
   if (presetCategoryId.value) {
-    console.log('设置预设分类ID:', presetCategoryId.value)
     form.category_id = presetCategoryId.value
   }
-  
-  console.log('初始化完成，表单category_id:', form.category_id)
 
   if (isEdit.value) {
     try {

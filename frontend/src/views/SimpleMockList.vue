@@ -76,32 +76,44 @@
             <!-- 方法筛选 -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">HTTP方法</label>
-              <select 
-                v-model="selectedMethod" 
-                class="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                @change="handleFilter"
-              >
-                <option value="">全部方法</option>
-                <option value="GET">GET</option>
-                <option value="POST">POST</option>
-                <option value="PUT">PUT</option>
-                <option value="DELETE">DELETE</option>
-                <option value="PATCH">PATCH</option>
-              </select>
+              <div class="relative">
+                <select 
+                  v-model="selectedMethod" 
+                  class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm appearance-none transition-colors duration-200 hover:border-gray-400"
+                >
+                  <option value="">全部方法</option>
+                  <option value="GET">GET</option>
+                  <option value="POST">POST</option>
+                  <option value="PUT">PUT</option>
+                  <option value="DELETE">DELETE</option>
+                  <option value="PATCH">PATCH</option>
+                </select>
+                <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
             </div>
 
             <!-- 状态筛选 -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">状态</label>
-              <select 
-                v-model="selectedStatus" 
-                class="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                @change="handleFilter"
-              >
-                <option value="">全部状态</option>
-                <option value="true">已启用</option>
-                <option value="false">已禁用</option>
-              </select>
+              <div class="relative">
+                <select 
+                  v-model="selectedStatus" 
+                  class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm appearance-none transition-colors duration-200 hover:border-gray-400"
+                >
+                  <option value="">全部状态</option>
+                  <option value="true">已启用</option>
+                  <option value="false">已禁用</option>
+                </select>
+                <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -198,7 +210,7 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                   <tr 
-                    v-for="mock in filteredMocks" 
+                    v-for="mock in displayMocks" 
                     :key="mock.id"
                     class="hover:bg-gray-50"
                   >
@@ -285,7 +297,7 @@
                         <!-- 详情按钮 -->
                         <RouterLink
                           :to="`/mocks/${mock.id}`"
-                          class="inline-flex items-center px-3 py-2 text-xs font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 shadow-sm transition-colors duration-200"
+                          class="inline-flex items-center px-3 py-2 text-xs font-medium rounded-md text-gray-700 bg-orange-300 hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 shadow-sm transition-colors duration-200"
                           title="查看详情"
                         >
                           <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -323,6 +335,91 @@
                   </tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+          
+          <!-- 分页组件 -->
+          <div v-if="pagination.total > 0" class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+            <div class="flex items-center justify-between">
+              <div class="flex-1 flex justify-between sm:hidden">
+                <!-- 移动端分页 -->
+                <button
+                  @click="changePage(pagination.page - 1)"
+                  :disabled="pagination.page <= 1"
+                  class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  上一页
+                </button>
+                <button
+                  @click="changePage(pagination.page + 1)"
+                  :disabled="pagination.page >= pagination.pages"
+                  class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  下一页
+                </button>
+              </div>
+              <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p class="text-sm text-gray-700">
+                    显示第
+                    <span class="font-medium">{{ (pagination.page - 1) * pagination.size + 1 }}</span>
+                    到
+                    <span class="font-medium">{{ Math.min(pagination.page * pagination.size, pagination.total) }}</span>
+                    项，共
+                    <span class="font-medium">{{ pagination.total }}</span>
+                    项
+                  </p>
+                </div>
+                <div>
+                  <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <!-- 上一页 -->
+                    <button
+                      @click="changePage(pagination.page - 1)"
+                      :disabled="pagination.page <= 1"
+                      class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span class="sr-only">上一页</span>
+                      <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                    
+                    <!-- 页码按钮 -->
+                    <template v-for="page in getPageNumbers()" :key="page">
+                      <button
+                        v-if="page !== '...'"
+                        @click="changePage(page)"
+                        :class="[
+                          'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
+                          page === pagination.page
+                            ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                        ]"
+                      >
+                        {{ page }}
+                      </button>
+                      <span
+                        v-else
+                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
+                      >
+                        ...
+                      </span>
+                    </template>
+                    
+                    <!-- 下一页 -->
+                    <button
+                      @click="changePage(pagination.page + 1)"
+                      :disabled="pagination.page >= pagination.pages"
+                      class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span class="sr-only">下一页</span>
+                      <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                  </nav>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -377,8 +474,10 @@ const {
   loading,
   error,
   mocks,
+  pagination,
   query,
   fetchMocks,
+  changePage,
   deleteMock: deleteMockApi,
   testMock: testMockApi
 } = useMocks()
@@ -388,25 +487,11 @@ const {
   findCategoryById
 } = useCategories()
 
-// 筛选后的Mock列表
-const filteredMocks = computed(() => {
-  return mocks.value.filter(mock => {
-    const matchesSearch = !searchQuery.value || 
-      mock.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      mock.path.toLowerCase().includes(searchQuery.value.toLowerCase())
-    
-    const matchesMethod = !selectedMethod.value || mock.method === selectedMethod.value
-    
-    const matchesStatus = !selectedStatus.value || 
-      (selectedStatus.value === 'true' && mock.is_active) ||
-      (selectedStatus.value === 'false' && !mock.is_active)
-    
-    return matchesSearch && matchesMethod && matchesStatus
-  })
-})
+// 直接使用mocks，不再需要前端过滤
+const displayMocks = computed(() => mocks.value)
 
-// 总接口数和未分类接口数
-const totalCount = computed(() => mocks.value.length)
+// 总接口数从分页信息获取
+const totalCount = computed(() => pagination.total)
 const uncategorizedCount = computed(() => 
   mocks.value.filter(mock => !mock.category_id).length
 )
@@ -446,7 +531,7 @@ const toggleSelectAll = () => {
   if (isAllSelected.value) {
     selectedMockIds.value.clear()
   } else {
-    filteredMocks.value.forEach(mock => selectedMockIds.value.add(mock.id))
+    displayMocks.value.forEach(mock => selectedMockIds.value.add(mock.id))
   }
 }
 
@@ -457,7 +542,7 @@ const clearSelection = () => {
 
 // 是否全选
 const isAllSelected = computed(() => {
-  return filteredMocks.value.length > 0 && filteredMocks.value.every(mock => selectedMockIds.value.has(mock.id))
+  return displayMocks.value.length > 0 && displayMocks.value.every(mock => selectedMockIds.value.has(mock.id))
 })
 
 // 处理单个接口移动
@@ -468,7 +553,7 @@ const handleSingleMove = (mock: any) => {
 
 // 处理批量接口移动
 const handleBatchMove = () => {
-  const selectedMocks = filteredMocks.value.filter(mock => selectedMockIds.value.has(mock.id))
+  const selectedMocks = displayMocks.value.filter(mock => selectedMockIds.value.has(mock.id))
   selectedMocksForMove.value = selectedMocks
   showMoveModal.value = true
 }
@@ -501,13 +586,57 @@ const handleCategorySelect = (categoryId: number | null) => {
 // 搜索处理
 const handleSearch = () => {
   query.search = searchQuery.value
+  query.page = 1 // 重置到第一页
   refreshData()
+}
+
+// 生成页码数组
+const getPageNumbers = () => {
+  const current = pagination.page
+  const total = pagination.pages
+  const pages = []
+  
+  if (total <= 7) {
+    // 总页数小于等于7，显示所有页码
+    for (let i = 1; i <= total; i++) {
+      pages.push(i)
+    }
+  } else {
+    // 总页数大于7，使用省略号
+    if (current <= 4) {
+      // 当前页在前面
+      for (let i = 1; i <= 5; i++) {
+        pages.push(i)
+      }
+      pages.push('...')
+      pages.push(total)
+    } else if (current >= total - 3) {
+      // 当前页在后面
+      pages.push(1)
+      pages.push('...')
+      for (let i = total - 4; i <= total; i++) {
+        pages.push(i)
+      }
+    } else {
+      // 当前页在中间
+      pages.push(1)
+      pages.push('...')
+      for (let i = current - 1; i <= current + 1; i++) {
+        pages.push(i)
+      }
+      pages.push('...')
+      pages.push(total)
+    }
+  }
+  
+  return pages
 }
 
 // 筛选处理
 const handleFilter = () => {
   query.method = selectedMethod.value || undefined
   query.is_active = selectedStatus.value ? selectedStatus.value === 'true' : undefined
+  query.page = 1 // 重置到第一页
   refreshData()
 }
 
