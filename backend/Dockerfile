@@ -30,7 +30,7 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
 # 复制应用代码
-COPY . .
+COPY backend/ .
 
 # 更改文件所有权
 RUN chown -R appuser:appuser /app

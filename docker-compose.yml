@@ -27,8 +27,8 @@ services:
   # 后端服务
   backend:
     build: 
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: mocker_backend
     environment:
       DATABASE_URL: mysql+pymysql://root:qwer4321@mysql:3306/mocker
