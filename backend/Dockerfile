@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple uv
 
 # 复制项目配置文件
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock README.md ./
 
 # 安装依赖（先复制依赖文件，利用Docker缓存）
 RUN uv sync --frozen --no-dev --index-url https://pypi.tuna.tsinghua.edu.cn/simple
