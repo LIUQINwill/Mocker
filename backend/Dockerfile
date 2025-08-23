@@ -25,13 +25,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # 安装uv（更快的Python包管理器）
-RUN pip install --no-cache-dir uv
+RUN pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple uv
 
 # 复制项目配置文件
 COPY pyproject.toml uv.lock ./
 
 # 安装依赖（先复制依赖文件，利用Docker缓存）
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev --index-url https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 复制应用代码
 COPY backend/ .
