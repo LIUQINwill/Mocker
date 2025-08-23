@@ -4,6 +4,7 @@
 
 import { ref, computed } from 'vue'
 import { categoryApi } from '@/api/categories'
+import { toast } from '@/composables/useToast'
 import type {
   Category,
   CategoryTree,
@@ -13,12 +14,15 @@ import type {
   BatchUpdateCategoryRequest
 } from '@/types/category'
 
+// 全局状态管理，确保数据在组件间共享
+const loading = ref(false)
+const fetchLoading = ref(false)
+const error = ref<string | null>(null)
+const categories = ref<Category[]>([])
+const categoryTree = ref<CategoryTree[]>([])
+const stats = ref<CategoryStats | null>(null)
+
 export function useCategories() {
-  const loading = ref(false)
-  const error = ref<string | null>(null)
-  const categories = ref<Category[]>([])
-  const categoryTree = ref<CategoryTree[]>([])
-  const stats = ref<CategoryStats | null>(null)
 
   /**
    * 获取分类列表
@@ -40,15 +44,44 @@ export function useCategories() {
    * 获取分类树形结构
    */
   const fetchCategoryTree = async () => {
+    // 防止重复请求
+    if (fetchLoading.value) {
+      return
+    }
+
     try {
-      loading.value = true
+      fetchLoading.value = true
       error.value = null
-      categoryTree.value = await categoryApi.getCategoryTree()
+      
+      const result = await categoryApi.getCategoryTree()
+      
+      // 验证和清理数据
+      if (!Array.isArray(result)) {
+        categoryTree.value = []
+        return
+      }
+      
+      const cleanResult = result.filter(category => {
+        return category && 
+          typeof category === 'object' && 
+          'id' in category && 
+          'name' in category &&
+          category.name !== null &&
+          category.name !== undefined
+      })
+      
+      // 直接赋值，确保响应式更新
+      categoryTree.value = cleanResult
+      
     } catch (err: any) {
-      error.value = err.response?.data?.detail || err.message || '获取分类树失败'
+      const errorMessage = err.response?.data?.detail || err.message || '获取分类树失败'
+      error.value = errorMessage
       console.error('获取分类树失败:', err)
+      
+      // 确保categoryTree是空数组
+      categoryTree.value = []
     } finally {
-      loading.value = false
+      fetchLoading.value = false
     }
   }
 
@@ -75,15 +108,24 @@ export function useCategories() {
     try {
       loading.value = true
       error.value = null
+      
       const newCategory = await categoryApi.createCategory(categoryData)
       
       // 重新获取分类列表
       await fetchCategoryTree()
       
+      // 显示成功提示
+      toast.success('创建分类成功', `分类"${newCategory.name}"已创建`)
+      
       return newCategory
     } catch (err: any) {
-      error.value = err.response?.data?.detail || err.message || '创建分类失败'
+      const errorMessage = err.response?.data?.detail || err.message || '创建分类失败'
+      error.value = errorMessage
       console.error('创建分类失败:', err)
+      
+      // 显示错误提示
+      toast.error('创建分类失败', errorMessage)
+      
       return null
     } finally {
       loading.value = false
@@ -102,10 +144,18 @@ export function useCategories() {
       // 重新获取分类列表
       await fetchCategoryTree()
       
+      // 显示成功提示
+      toast.success('更新分类成功', `分类"${updatedCategory.name}"已更新`)
+      
       return updatedCategory
     } catch (err: any) {
-      error.value = err.response?.data?.detail || err.message || '更新分类失败'
+      const errorMessage = err.response?.data?.detail || err.message || '更新分类失败'
+      error.value = errorMessage
       console.error('更新分类失败:', err)
+      
+      // 显示错误提示
+      toast.error('更新分类失败', errorMessage)
+      
       return null
     } finally {
       loading.value = false
@@ -124,10 +174,18 @@ export function useCategories() {
       // 重新获取分类列表
       await fetchCategoryTree()
       
+      // 显示成功提示
+      toast.success('删除分类成功', '分类已成功删除')
+      
       return true
     } catch (err: any) {
-      error.value = err.response?.data?.detail || err.message || '删除分类失败'
+      const errorMessage = err.response?.data?.detail || err.message || '删除分类失败'
+      error.value = errorMessage
       console.error('删除分类失败:', err)
+      
+      // 显示错误提示
+      toast.error('删除分类失败', errorMessage)
+      
       return false
     } finally {
       loading.value = false
@@ -159,9 +217,19 @@ export function useCategories() {
     const flatten = (categories: CategoryTree[], level = 0): (CategoryTree & { level: number })[] => {
       const result: (CategoryTree & { level: number })[] = []
       
-      for (const category of categories) {
+      // 确保categories是数组且每个元素都有效
+      const validCategories = Array.isArray(categories) ? categories.filter(category => 
+        category && 
+        typeof category === 'object' && 
+        'id' in category && 
+        'name' in category &&
+        category.name !== null &&
+        category.name !== undefined
+      ) : []
+      
+      for (const category of validCategories) {
         result.push({ ...category, level })
-        if (category.children && category.children.length > 0) {
+        if (category.children && Array.isArray(category.children) && category.children.length > 0) {
           result.push(...flatten(category.children, level + 1))
         }
       }
@@ -194,6 +262,7 @@ export function useCategories() {
 
   return {
     loading,
+    fetchLoading,
     error,
     categories,
     categoryTree,
