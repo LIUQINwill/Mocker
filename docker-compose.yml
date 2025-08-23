@@ -6,7 +6,7 @@ services:
     image: mysql:8.0
     container_name: mocker_mysql
     environment:
-      MYSQL_ROOT_PASSWORD: mocker123
+      MYSQL_ROOT_PASSWORD: qwer4321
       MYSQL_DATABASE: mocker
       MYSQL_CHARACTER_SET_SERVER: utf8mb4
       MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
@@ -31,7 +31,7 @@ services:
       dockerfile: Dockerfile
     container_name: mocker_backend
     environment:
-      DATABASE_URL: mysql+pymysql://root:mocker123@mysql:3306/mocker
+      DATABASE_URL: mysql+pymysql://root:qwer4321@mysql:3306/mocker
       DEBUG: "false"
     depends_on:
       mysql:
@@ -66,28 +66,9 @@ services:
     networks:
       - mocker-network
 
-  # Redis缓存（可选，用于会话存储和缓存）
-  redis:
-    image: redis:7-alpine
-    container_name: mocker_redis
-    ports:
-      - "6379:6379"
-    restart: unless-stopped
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - mocker-network
 
 volumes:
   mysql_data:
-    driver: local
-  redis_data:
     driver: local
 
 networks:
