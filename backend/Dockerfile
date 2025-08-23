@@ -10,9 +10,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # 设置工作目录
 WORKDIR /app
 
-# 使用国内镜像源加速包下载
-RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list && \
-    sed -i 's/security.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list
+# 使用国内镜像源加速包下载（适配新版本 Debian）
+RUN if [ -f /etc/apt/sources.list ]; then \
+        sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list && \
+        sed -i 's/security.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list; \
+    fi && \
+    if [ -d /etc/apt/sources.list.d ]; then \
+        find /etc/apt/sources.list.d -name "*.sources" -exec sed -i 's/deb.debian.org/mirrors.aliyun.com/g' {} \; && \
+        find /etc/apt/sources.list.d -name "*.sources" -exec sed -i 's/security.debian.org/mirrors.aliyun.com/g' {} \; ; \
+    fi
 
 # 安装系统依赖
 RUN apt-get update && apt-get install -y \
