@@ -55,9 +55,12 @@ services:
     container_name: mocker_frontend
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - backend
     restart: unless-stopped
+    volumes:       # <--- 新增：把宿主机的证书挂载进去
+      - /myprojects/nginx/tls:/etc/nginx/ssl
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]
       interval: 30s
